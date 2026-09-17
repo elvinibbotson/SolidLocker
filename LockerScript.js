@@ -1,0 +1,398 @@
+function id(el) {
+	return document.getElementById(el);
+}
+'use strict';
+// GLOBAL VARIABLES	
+var items=[];
+var item=null;
+var categories=[];
+var category=null;
+var itemIndex=0;
+var listItems=[];
+var listItem=null;
+var currentDialog=null;
+var pin='';
+var keyCode=null;
+var dragStart={};
+var backupDay;
+// solid session initialisation...
+const auth=solidClientAuthentication;
+const session=auth.getDefaultSession();
+// DRAG TO RETURN TO CATEGORY LIST
+id('main').addEventListener('touchstart', function(event) {
+    // console.log(event.changedTouches.length+" touches");
+    dragStart.x=event.changedTouches[0].clientX;
+    dragStart.y=event.changedTouches[0].clientY;
+})
+id('main').addEventListener('touchend', function(event) {
+    var drag={};
+    drag.x=dragStart.x-event.changedTouches[0].clientX;
+    drag.y=dragStart.y-event.changedTouches[0].clientY;
+    if(Math.abs(drag.y)>50) return; // ignore vertical drags
+    if((drag.x<-50)&&category) {
+        category=null;
+        listCategories();
+    }
+    // else if((drag.x>50)&&(currentDialog)) showDialog(currentDialog,false); // drag left to close dialogs
+})
+// TAP ON HEADER
+id('heading').addEventListener('click',function() {
+	if(category===null) {
+		id('saveButton').disabled=false;
+		id('loadButton').disabled=false;
+		id('dataMessage').innerText='save or restore backup';
+		showDialog('dataDialog',true);
+	}
+});
+// CLOSE DIALOG
+id('curtain').addEventListener('click',function() {
+	showDialog(currentDialog,false);
+})
+// SHOW/HIDE DIALOG
+function showDialog(dialog,show) {
+    console.log('show '+dialog+': '+show);
+    if(currentDialog) id(currentDialog).style.display='none';
+    if(show) {
+        id(dialog).style.display='block';
+        currentDialog=dialog;
+        id('buttonNew').style.display='none';
+        id('curtain').style.height='100%';
+    }
+    else {
+        id(dialog).style.display='none';
+        currentDialog=null;
+        id('buttonNew').style.display='block';
+        id('curtain').style.height='0';
+    }
+}
+// NEW CATEGORY/NOTE
+id('buttonNew').addEventListener('click', function(){
+	item={};
+    if(category==null) { // add new category
+    	id('categoryField').value='';
+    	id('addCategoryButton').style.display='block';
+        showDialog('categoryDialog',true);
+    }
+    else { // add note
+    	id('noteField').value='';
+    	id('deleteNoteButton').style.display='none';
+    	id('addNoteButton').style.display='block';
+    	id('saveNoteButton').style.display='none';
+        showDialog('noteDialog',true);
+    }
+})
+id('addCategoryButton').addEventListener('click',function() {
+	category=id('categoryField').value;
+	if(category.length<1) return; // no category name
+	if(categories.indexOf('category')>=0) return; // category already exists
+	list.innerHTML='';
+	id('header').innerText=category;
+	showDialog('categoryDialog',false);
+	console.log('new category - '+category);
+})
+id('addNoteButton').addEventListener('click', function() {
+	console.log('add note '+id('noteField').value);
+    item={};
+    item.category=category;
+    item.text=cryptify(id('noteField').value,keyCode);
+    console.log('encrypted to '+item.text);
+    items.push(item);
+    save(); // WAS saveData();
+    itemIndex=null;
+    showDialog('noteDialog',false);
+    listCategoryItems();
+    console.log('note added');
+})
+// EDIT NOTE
+id('saveNoteButton').addEventListener('click', function() {
+	console.log('update item '+itemIndex);
+	itemIndex=listItems[itemIndex].index;
+	console.log('ie. item '+itemIndex);
+	item={};
+    item.category=category;
+    item.text=cryptify(id('noteField').value,keyCode);
+    console.log("encrypted note: "+item.text);
+    items[itemIndex]=item;
+    save(); // WAS saveData();
+    console.log('note updated');
+    showDialog('noteDialog',false);
+    listCategoryItems();
+})
+id('deleteNoteButton').addEventListener('click', function() {
+	console.log('delete item '+itemIndex);
+	itemIndex=listItems[itemIndex].index;
+	console.log('ie. item '+itemIndex);
+    items.splice(itemIndex,1);
+    save(); // WAS saveData();
+    console.log("delete complete");
+    showDialog('noteDialog',false);
+    listCategoryItems();
+    itemIndex=null;
+})
+// LIST CATEGORIES
+function listCategories() {
+	console.log('list '+categories.length+' categories');
+	listItem;
+	id("list").innerHTML=""; // clear list
+	categories.sort(function(a,b){ // sort alphabetically
+		if(a.toUpperCase()<b.toUpperCase()) return -1;
+		if(a.toUpperCase()>b.toUpperCase()) return 1;
+		return 0;
+	});
+	for(var i in categories) {
+		console.log('list '+categories[i]);
+		listItem=document.createElement('li');
+		listItem.index=i;
+		listItem.innerText=categories[i];
+		listItem.addEventListener('click',function() {
+			itemIndex=this.index;
+			console.log('open item '+itemIndex);
+			category=categories[this.index];
+			console.log('list category '+categories[this.index]);
+			listCategoryItems();
+		});
+		listItem.style.fontWeight='bold'; // lists are bold
+		id('list').appendChild(listItem);
+	}
+	id('heading').innerText='Locker';
+}
+// LIST ITEMS IN CATEGORY
+function listCategoryItems() {
+	console.log('list items in category '+category);
+	listItems=[];
+	id("list").innerHTML=""; // clear list
+	for(var i in items) {
+		console.log('item '+i+' category: '+items[i].category);
+		if(items[i].category==category) {
+			listItem={};
+			listItem.index=i;
+			listItem.text=cryptify(items[i].text,keyCode);
+			listItems.push(listItem);
+		}
+	}
+	listItems.sort(function(a,b){ // sort alphabetically
+		if(a.text.toUpperCase()<b.text.toUpperCase()) return -1;
+		if(a.text.toUpperCase()>b.text.toUpperCase()) return 1;
+		return 0;
+	});
+	for(i in listItems) {
+		console.log('list '+listItems[i].text);
+		listItem=document.createElement('li');
+		listItem.index=i;
+		listItem.innerText=listItems[i].text;
+		listItem.addEventListener('click',function() {
+			itemIndex=this.index;
+			item=listItems[this.index];
+			console.log('edit note '+i+': '+item.text);
+			id('noteField').value=item.text;
+			id('deleteNoteButton').style.display='block';
+			id('addNoteButton').style.display='none';
+			id('saveNoteButton').style.display='block';
+			showDialog('noteDialog',true);
+		});
+		id('list').appendChild(listItem);
+	}
+	id('heading').innerText=category;
+}
+// DATA
+function load() {
+	var data=localStorage.getItem('LockerData');
+	if(!data) {
+		id('dataMessage').innerText='No data - restore from backup?';
+		id('saveButton').disabled=true;
+		id('loadButton').disabled=false;
+		showDialog('dataDialog',true);
+		return;
+	}
+	console.log('data: '+data.length+' bytes');
+    items=JSON.parse(data);
+    console.log(items.length+' items');
+	categories=[];
+	for(var i in items) {
+		console.log('item '+i+': '+items[i].text+'; category: '+items[i].category);
+		if(categories.indexOf(items[i].category)<0) categories.push(items[i].category);
+	}
+	console.log(items.length+' items loaded; '+categories.length+' categories');
+	category=null;
+	// listCategories();
+	var today=Math.floor(new Date().getTime()/86400000);
+	var days=today-backupDay;
+	if(days>4) { // backup reminder every 5 days
+		if(days>28) days='too many';
+		id('dataMessage').innerText=days+' days since last backup';
+		id('loadButton').disabled=false;
+		id('saveButton').disabled=true;
+		showDialog('dataDialog',true);
+	}
+}
+function save() {
+	var data=JSON.stringify(items);
+	window.localStorage.setItem('LockerData',data);
+	console.log('data saved to LockerData');
+}
+// id('connectButton').addEventListener('click',connect);
+id('saveButton').addEventListener('click',backup);
+id('loadButton').addEventListener('click',restore);
+/* NEW SOLID CODE TO RESTORE BACKUP INSTEAD OF THIS...
+	id('saveButton').disabled=true;
+	
+	var event = new MouseEvent('click',{
+		bubbles: true,
+		cancelable: true,
+		view: window
+	});
+	fileChooser.dispatchEvent(event);
+	fileChooser.onchange=(event)=>{
+		var file=id('fileChooser').files[0];
+    	console.log("file name: "+file.name);
+    	var fileReader=new FileReader();
+    	fileReader.addEventListener('load', function(evt) {
+			console.log("file read: "+evt.target.result);
+    		var data=evt.target.result;
+    		var json=JSON.parse(data);
+    		items=json.items;
+			console.log(items.length+" items loaded");
+    		save();
+    		console.log('data imported and saved');
+    		load();
+    	});
+    	fileReader.readAsText(file);
+    	listCategories();
+	}
+	id('dataMessage').innerText='';
+	showDialog('dataDialog',false);
+});
+*/
+function connect() {
+	console.log('logging in');
+	auth.login({
+      oidcIssuer:"https://privatedatapod.com",
+      redirectUrl:window.location.href,
+      clientName:"SolidLocker"
+    });
+}
+auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
+	if(session.info.isLoggedIn) {
+		console.log('logged in as '+session.info.webId);
+		id('saveButton').removeAttribute("disabled");
+    	id('loadButton').removeAttribute("disabled");
+	}
+});
+async function backup() {
+	if(!session.info.isLoggedIn) connect(); // ensure connected
+  	console.log("backup data");
+	var fileName="SolidLockerData.json";
+	console.log(items.length+" items - save");
+	var data={'items': items};
+	var json=JSON.stringify(data);
+	await session.fetch('https://elvinibbotson.privatedatapod.com/'+fileName,{
+		method:'PUT',
+		headers:{'Content-Type':'appication/json'},
+		body:json
+	});
+	console.log('data backed up');
+	id('dataMessage').innerText='';
+	showDialog('dataDialog',false);
+}
+async function restore() {
+	if(!session.info.isLoggedIn) connect(); // ensure connected
+	console.log('restore data');
+	var json=await session.fetch('https://elvinibbotson.privatedatapod/SolidLockerData.json');
+	var data=JSON.parse(data);
+    items=data.items;
+	console.log(items.length+" items loaded");
+    save();
+    console.log('data imported and saved');
+    load();
+    showDialog('dataDialog',false);
+}
+// ENCRYPT/DECRYPT TEXT USING KEY
+function cryptify(value,key) {
+	var i=0;
+	var result="";
+	var k;
+	var v;
+	for (i=0;i<value.length;i++) {
+		k=key.charCodeAt(i%key.length);
+		v=value.charCodeAt(i);
+		result+=String.fromCharCode(k ^ v);
+	}
+	return result;
+};
+// KEY CHECK
+function tapKey(n) {
+	if(n=='<') {
+		console.log('BACKSPACE');
+		var l=pin.length;
+		if(l>0) pin=pin.substr(0,l-1);
+		console.log('pin: '+pin);
+		id('pinField').innerHTML='';
+		while(l>1) {
+			id('pinField').innerHTML+='*';
+			l--;
+		}
+		return false;
+	}
+	pin+=n;
+	id('pinField').innerHTML+='*';
+	console.log('pin: '+pin);
+	if(pin.length>3) { // 4 digits entered
+		console.log("keyCode: "+keyCode);
+		console.log("check: "+id('keyCheck').value);
+		if(keyCode===null) { // set keyCode - step 1
+			keyCode=pin;
+			id('keyCheck').value=pin;
+			id('pinField').innerText='';
+			pin='';
+			id('keyTitle').innerText='confirm PIN';
+        	return;
+    	}
+    	else if(pin==id('keyCheck').value) { // set keyCode step 2 or unlock
+        	window.localStorage.keyCode=cryptify(pin,'secrets');
+        	// unlocked=true;
+        	showDialog('keyDialog',false);
+        	listCategories();
+        	return true;
+    	}
+    	else {
+    		id('pinField').innerText='';
+			pin='';
+    	}
+	}
+}  
+// START-UP CODE
+keyCode=window.localStorage.keyCode; // load any saved key
+console.log("saved key: "+keyCode);
+if(!keyCode) { // first use - set a PIN
+	console.log('set new PIN');
+    keyCode=null;
+    id('keyTitle').innerText='set a PIN';
+    id('pinField').innerText='';
+    pin='';
+    showDialog('keyDialog',true);
+}
+else { // start-up - enter PIN
+	console.log('encrypted keyCode: '+keyCode);
+	keyCode=cryptify(keyCode,'secrets'); // saved key was encrypted
+	console.log("decoded keyCode: "+keyCode);
+	id('keyTitle').innerText='PIN';
+	id('pinField').innerText='';
+	pin='';
+    id('keyCheck').value=keyCode;
+    showDialog('keyDialog',true);
+}
+backupDay=window.localStorage.getItem('backupDay');
+if(backupDay) console.log('last backup on day '+backupDay);
+else backupDay=0;
+load();
+// implement service worker if browser is PWA friendly
+if (navigator.serviceWorker.controller) {
+	console.log('Active service worker found, no need to register')
+}
+else { //Register the ServiceWorker
+	navigator.serviceWorker.register('sw.js', {
+		scope: '/SolidLocker/'
+	}).then(function(reg) {
+		console.log('Service worker has been registered for scope:'+ reg.scope);
+	});
+}

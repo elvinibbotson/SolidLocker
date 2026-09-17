@@ -1,0 +1,24 @@
+{
+  "name": "SolidLocker PWA",
+  "short_name": "SolidLocker",
+  "icons": [
+	{
+		"src": "Locker.png",
+		"sizes": "512x512",
+		"type": "image/png",
+		"purpose": "any"
+	}
+  ],
+  "screenshots": [
+  	{
+  		"src": "screenshot.png",
+  		"sizes": "360x640",
+  		"type": "image/png"
+  	}
+  ],
+  "start_url": "index.html",
+  "display": "standalone",
+  "orientation":"portrait",
+  "background_color": "black",
+  "theme_color": "black"
+}
