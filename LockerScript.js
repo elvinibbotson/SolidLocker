@@ -17,7 +17,7 @@ var dragStart={};
 var backupDay;
 // solid session & authentication...
 const auth=solidClientAuthentication;
-// const session;
+const session=auth.getDefaultSession();
 // DRAG TO RETURN TO CATEGORY LIST
 id('main').addEventListener('touchstart', function(event) {
     // console.log(event.changedTouches.length+" touches");
@@ -266,12 +266,15 @@ id('loadButton').addEventListener('click',restore);
 function connect() {
 	console.log('CONNECT - logging in');
 	// const auth=solidClientAuthentication;
-	const session=auth.getDefaultSession();
-	auth.login({
-      oidcIssuer:"https://privatedatapod.com",
-      redirectUrl:window.location.href,
-      clientName:"SolidLocker"
-    });
+	// const session=auth.getDefaultSession();
+	try {
+		auth.login({
+    		oidcIssuer:"https://privatedatapod.com",
+    		redirectUrl:window.location.href,
+    		clientName:"SolidLocker"
+    	});
+	}
+	catch(error) {console.log.error(error.message);}
 }
 auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
 	if(session.info.isLoggedIn) {
