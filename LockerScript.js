@@ -288,6 +288,21 @@ async function backup() {
 	console.log(items.length+" items - save");
 	var data={'items': items};
 	var json=JSON.stringify(data);
+	try {
+		response=await session.fetch('https://elvinibbotson.privatedatapod.com/'+fileName,{
+			method:'PUT',
+			headers:{'Content-Type':'application/json'},
+			body:json
+		});
+		if(!response.ok) {
+    		throw new Error(`Response status: ${response.status}`);
+    	}
+    	const result=await response.json();
+    	console.log(result);
+	}
+	catch (error) {console.error(error.message);}
+}
+	/*
 	await session.fetch('https://elvinibbotson.privatedatapod.com/'+fileName,{
 		method:'PUT',
 		headers:{'Content-Type':'application/json'},
@@ -297,7 +312,8 @@ async function backup() {
 		id('dataMessage').innerText='';
 		showDialog('dataDialog',false);
 	}
-}
+	*/
+
 async function restore() {
 	if(!session.info.isLoggedIn) connect(); // ensure connected
 	console.log('restore data');
