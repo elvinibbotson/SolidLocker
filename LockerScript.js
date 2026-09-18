@@ -15,9 +15,10 @@ var pin='';
 var keyCode=null;
 var dragStart={};
 var backupDay;
-// solid session initialisation...
-const auth=solidClientAuthentication;
-const session=auth.getDefaultSession();
+/* solid session & authentication...
+const auth;
+const session;
+*/
 // DRAG TO RETURN TO CATEGORY LIST
 id('main').addEventListener('touchstart', function(event) {
     // console.log(event.changedTouches.length+" touches");
@@ -264,7 +265,9 @@ id('loadButton').addEventListener('click',restore);
 });
 */
 function connect() {
-	console.log('logging in');
+	console.log('CONNECT - logging in');
+	const auth=solidClientAuthentication;
+	const session=auth.getDefaultSession();
 	auth.login({
       oidcIssuer:"https://privatedatapod.com",
       redirectUrl:window.location.href,
@@ -280,19 +283,20 @@ auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
 });
 async function backup() {
 	if(!session.info.isLoggedIn) connect(); // ensure connected
-  	console.log("backup data");
+  	console.log("BACKUP");
 	var fileName="SolidLockerData.json";
 	console.log(items.length+" items - save");
 	var data={'items': items};
 	var json=JSON.stringify(data);
 	await session.fetch('https://elvinibbotson.privatedatapod.com/'+fileName,{
 		method:'PUT',
-		headers:{'Content-Type':'appication/json'},
+		headers:{'Content-Type':'application/json'},
 		body:json
-	});
-	console.log('data backed up');
-	id('dataMessage').innerText='';
-	showDialog('dataDialog',false);
+	}).then {
+		console.log('data backed up');
+		id('dataMessage').innerText='';
+		showDialog('dataDialog',false);
+	}
 }
 async function restore() {
 	if(!session.info.isLoggedIn) connect(); // ensure connected
