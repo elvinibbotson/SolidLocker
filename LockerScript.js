@@ -15,10 +15,9 @@ var pin='';
 var keyCode=null;
 var dragStart={};
 var backupDay;
-/* solid session & authentication...
-const auth;
-const session;
-*/
+// solid session & authentication...
+const auth=solidClientAuthentication;
+// const session;
 // DRAG TO RETURN TO CATEGORY LIST
 id('main').addEventListener('touchstart', function(event) {
     // console.log(event.changedTouches.length+" touches");
@@ -266,7 +265,7 @@ id('loadButton').addEventListener('click',restore);
 */
 function connect() {
 	console.log('CONNECT - logging in');
-	const auth=solidClientAuthentication;
+	// const auth=solidClientAuthentication;
 	const session=auth.getDefaultSession();
 	auth.login({
       oidcIssuer:"https://privatedatapod.com",
