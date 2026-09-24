@@ -274,7 +274,7 @@ function connect() {
     		clientName:"SolidLocker"
     	});
 	}
-	catch(error) {console.log.error(error.message);}
+	catch(error) {console.error(error.message);}
 }
 auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
 	if(session.info.isLoggedIn) {
@@ -284,9 +284,9 @@ auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
 	}
 });
 async function backup() {
-	if(!session.info.isLoggedIn) connect(); // ensure connected
+	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
   	console.log("BACKUP");
-	var fileName="SolidLockerData.json";
+	var fileName="drive/SolidLockerData.json";
 	console.log(items.length+" items - save");
 	var data={'items': items};
 	var json=JSON.stringify(data);
@@ -299,8 +299,8 @@ async function backup() {
 		if(!response.ok) {
     		throw new Error(`Response status: ${response.status}`);
     	}
-    	const result=await response.json();
-    	console.log(result);
+    	// const result=await response.json();
+    	console.log('backup saved, status: '+response.status);
 	}
 	catch (error) {console.error(error.message);}
 }

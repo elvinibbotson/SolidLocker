@@ -1,5 +1,5 @@
 // This is the "Offline copy of pages" service worker
-// Install stage sets up the index page (home page) in the cahche and opens a new cache
+// Install stage sets up the index page (home page) in the cache and opens a new cache
 self.addEventListener('install', function(event) {
   var indexPage = new Request('index.html');
   event.waitUntil(
@@ -13,6 +13,10 @@ self.addEventListener('install', function(event) {
 
 //If any fetch fails, it will look for the request in the cache and serve it from there first
 self.addEventListener('fetch', function(event) {
+	// try this fix...
+	if(event.request.method!=='GET') return; // never cache PUT/POST
+	if(!event.request.url.startsWith(self.location.origin)) return; // only cache own files	
+	// ...end of fix
   var updateCache = function(request){
     return caches.open('locker-offline').then(function (cache) {
       return fetch(request).then(function (response) {
