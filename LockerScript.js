@@ -233,36 +233,6 @@ function save() {
 // id('connectButton').addEventListener('click',connect);
 id('saveButton').addEventListener('click',backup);
 id('loadButton').addEventListener('click',restore);
-/* NEW SOLID CODE TO RESTORE BACKUP INSTEAD OF THIS...
-	id('saveButton').disabled=true;
-	
-	var event = new MouseEvent('click',{
-		bubbles: true,
-		cancelable: true,
-		view: window
-	});
-	fileChooser.dispatchEvent(event);
-	fileChooser.onchange=(event)=>{
-		var file=id('fileChooser').files[0];
-    	console.log("file name: "+file.name);
-    	var fileReader=new FileReader();
-    	fileReader.addEventListener('load', function(evt) {
-			console.log("file read: "+evt.target.result);
-    		var data=evt.target.result;
-    		var json=JSON.parse(data);
-    		items=json.items;
-			console.log(items.length+" items loaded");
-    		save();
-    		console.log('data imported and saved');
-    		load();
-    	});
-    	fileReader.readAsText(file);
-    	listCategories();
-	}
-	id('dataMessage').innerText='';
-	showDialog('dataDialog',false);
-});
-*/
 function connect() {
 	console.log('CONNECT - logging in');
 	// const auth=solidClientAuthentication;
@@ -308,27 +278,20 @@ async function backup() {
 async function restore() {
 	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
 	console.log('RESTORE');
-	//
 	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
 	console.log('response: '+response.json);
 	var body=await response.json();
-	console.log('items: '+body.items.length);
-	// var data=JSON.parse(json);
-    items=body.items;
+    var items=body.items;
 	console.log(items.length+" items loaded");
     save();
     console.log('data imported and saved');
     load();
     showDialog('dataDialog',false);
     message('data loaded');
-   /*
-    fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json')
-    .then((response)=>response.json())
-    .then(data=>{console.log('data'+)});
-    */
+
 }
 // DISPLAY MESSAGE
-function mmessage(text) {
+function message(text) {
 	id('message').innerText=text;
 	showDialog('messageDialog',true);
 }
