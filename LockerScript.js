@@ -342,7 +342,8 @@ function tapKey(n) {
         	window.localStorage.keyCode=cryptify(pin,'secrets');
         	// unlocked=true;
         	showDialog('keyDialog',false);
-        	listCategories();
+        	// listCategories();
+        	load();
         	return true;
     	}
     	else {
@@ -375,7 +376,7 @@ else { // start-up - enter PIN
 backupDay=window.localStorage.getItem('backupDay');
 if(backupDay) console.log('last backup on day '+backupDay);
 else backupDay=0;
-load();
+// load();
 // implement service worker if browser is PWA friendly
 if (navigator.serviceWorker.controller) {
 	console.log('Active service worker found, no need to register')
