@@ -307,7 +307,7 @@ async function backup() {
 async function restore() {
 	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
 	console.log('RESTORE');
-	var json=await session.fetch('https://elvinibbotson.privatedatapod/SolidLockerData.json');
+	var json=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
 	var data=JSON.parse(data);
     items=data.items;
 	console.log(items.length+" items loaded");
