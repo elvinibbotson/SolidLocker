@@ -271,6 +271,8 @@ async function backup() {
     	}
     	console.log('backup saved, status: '+response.status);
     	showDialog('dataDialog',false);
+    	var today=Math.floor(new Date().getTime()/86400000);
+		window.localStorage.setItem('backupDay',today);
     	message('data saved');
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
