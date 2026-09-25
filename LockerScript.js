@@ -308,6 +308,7 @@ async function backup() {
 async function restore() {
 	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
 	console.log('RESTORE');
+	/*
 	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
 	console.log('response: '+response.json);
 	var json=await response.json();
@@ -320,6 +321,11 @@ async function restore() {
     load();
     showDialog('dataDialog',false);
     message('data loaded');
+    */
+    fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json')
+    .then((response)=>response.json())
+    .then(console.log('JSON: '+json));
+    
 }
 // DISPLAY MESSAGE
 function mmessage(text) {
