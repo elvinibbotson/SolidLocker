@@ -299,26 +299,14 @@ async function backup() {
 		if(!response.ok) {
     		throw new Error(`Response status: ${response.status}`);
     	}
-    	// const result=await response.json();
     	console.log('backup saved, status: '+response.status);
+    	showDialog('dataDialog',false);
 	}
-	catch (error) {console.error(error.message);}
+	catch (error) {console.error(error.message);alert(error.message);}
 }
-	/*
-	await session.fetch('https://elvinibbotson.privatedatapod.com/'+fileName,{
-		method:'PUT',
-		headers:{'Content-Type':'application/json'},
-		body:json
-	}).then {
-		console.log('data backed up');
-		id('dataMessage').innerText='';
-		showDialog('dataDialog',false);
-	}
-	*/
-
 async function restore() {
-	if(!session.info.isLoggedIn) connect(); // ensure connected
-	console.log('restore data');
+	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
+	console.log('RESTORE');
 	var json=await session.fetch('https://elvinibbotson.privatedatapod/SolidLockerData.json');
 	var data=JSON.parse(data);
     items=data.items;
