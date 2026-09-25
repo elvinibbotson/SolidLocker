@@ -301,6 +301,7 @@ async function backup() {
     	}
     	console.log('backup saved, status: '+response.status);
     	showDialog('dataDialog',false);
+    	message('data saved');
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
 }
@@ -309,6 +310,7 @@ async function restore() {
 	console.log('RESTORE');
 	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
 	var json=await response.json();
+	console.log('JSON: '+json);
 	var data=JSON.parse(json);
     items=data.items;
 	console.log(items.length+" items loaded");
@@ -316,6 +318,12 @@ async function restore() {
     console.log('data imported and saved');
     load();
     showDialog('dataDialog',false);
+    message('data loaded');
+}
+// DISPLAY MESSAGE
+function mmessage(text) {
+	id('message').innerText=text;
+	showDialog('messageDialog',true);
 }
 // ENCRYPT/DECRYPT TEXT USING KEY
 function cryptify(value,key) {
