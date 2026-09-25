@@ -308,24 +308,24 @@ async function backup() {
 async function restore() {
 	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
 	console.log('RESTORE');
-	/*
+	//
 	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
 	console.log('response: '+response.json);
-	var json=await response.json();
-	console.log('JSON: '+json);
-	var data=JSON.parse(json);
-    items=data.items;
+	var body=await response.json();
+	console.log('items: '+body.items.length);
+	// var data=JSON.parse(json);
+    items=body.items;
 	console.log(items.length+" items loaded");
     save();
     console.log('data imported and saved');
     load();
     showDialog('dataDialog',false);
     message('data loaded');
-    */
+   /*
     fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json')
     .then((response)=>response.json())
-    .then(console.log('JSON: '+response));
-    
+    .then(data=>{console.log('data'+)});
+    */
 }
 // DISPLAY MESSAGE
 function mmessage(text) {
