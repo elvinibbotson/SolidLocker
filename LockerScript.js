@@ -324,7 +324,7 @@ async function restore() {
     */
     fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json')
     .then((response)=>response.json())
-    .then(console.log('JSON: '+json));
+    .then(console.log('JSON: '+response));
     
 }
 // DISPLAY MESSAGE
