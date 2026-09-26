@@ -154,7 +154,7 @@ function listCategories() {
 		listItem.style.fontWeight='bold'; // lists are bold
 		id('list').appendChild(listItem);
 	}
-	id('heading').innerText='Locker';
+	id('heading').innerText='SolidLocker';
 }
 // LIST ITEMS IN CATEGORY
 function listCategoryItems() {
