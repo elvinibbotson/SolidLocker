@@ -14,7 +14,8 @@ var currentDialog=null;
 var pin='';
 var keyCode=null;
 var dragStart={};
-var backupDay;
+// var backupDay;
+var latest;
 // solid session & authentication...
 const auth=solidClientAuthentication;
 const session=auth.getDefaultSession();
@@ -37,12 +38,15 @@ id('main').addEventListener('touchend', function(event) {
 })
 // TAP ON HEADER
 id('heading').addEventListener('click',function() {
+	upload();
+	/*
 	if(category===null) {
 		id('saveButton').disabled=false;
 		id('loadButton').disabled=false;
 		id('dataMessage').innerText='save or restore backup';
 		showDialog('dataDialog',true);
 	}
+	*/
 });
 // CLOSE DIALOG
 id('curtain').addEventListener('click',function() {
@@ -215,6 +219,7 @@ function load() {
 	console.log(items.length+' items loaded; '+categories.length+' categories');
 	category=null;
 	listCategories();
+	/*
 	var today=Math.floor(new Date().getTime()/86400000);
 	var days=today-backupDay;
 	if(days>4) { // backup reminder every 5 days
@@ -224,15 +229,17 @@ function load() {
 		id('saveButton').disabled=true;
 		showDialog('dataDialog',true);
 	}
+	*/
 }
 function save() {
 	var data=JSON.stringify(items);
 	window.localStorage.setItem('LockerData',data);
+	window.localStorage.setItem('latest',new Date().toString());
 	console.log('data saved to LockerData');
 }
 // id('connectButton').addEventListener('click',connect);
-id('saveButton').addEventListener('click',backup);
-id('loadButton').addEventListener('click',restore);
+// id('saveButton').addEventListener('click',backup);
+// id('loadButton').addEventListener('click',restore);
 function connect() {
 	console.log('CONNECT - logging in');
 	// const auth=solidClientAuthentication;
@@ -253,7 +260,34 @@ auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
     	id('loadButton').removeAttribute("disabled");
 	}
 });
-async function backup() {
+async function sync() {
+	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
+	latest=window.localStorage.getItem('latest');
+	console.log('latest is '+latest);
+	message('SYNC - DOWNLOAD?',true);
+	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLogData.json',
+	{ // ONLY RESTORE DATA FROM POD IF NEWER THAN CURRENT LOCAL DATA
+		method: 'GET',
+		headers: {'If-Modified-Since':latest}
+	});
+	console.log('response: '+response.json);
+	if(response.ok) {
+		var body=await response.json();
+		console.log('response - last modified: '+response.lastModified);
+		var items=body.items;
+		save();
+		message(items.length+' items downloaded',false);
+	}
+	else { // local data is newer - upload to pod
+		message('|no download - UPLOAD',false);
+		upload();
+	}
+	latest=new Date().toString();
+	window.localStorage.setItem('latest',latest);
+	console.log('latest set to '+latest);
+	load(); // ensure working with latest dataset
+}
+async function upload() {
 	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
   	console.log("BACKUP");
 	var fileName="drive/SolidLockerData.json";
@@ -271,26 +305,11 @@ async function backup() {
     	}
     	console.log('backup saved, status: '+response.status);
     	showDialog('dataDialog',false);
-    	var today=Math.floor(new Date().getTime()/86400000);
-		window.localStorage.setItem('backupDay',today);
-    	message('data saved');
+    	// var today=Math.floor(new Date().getTime()/86400000);
+		// window.localStorage.setItem('backupDay',today);
+    	message(items.length+' items saved');
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
-}
-async function restore() {
-	if(!session.info.isLoggedIn) {connect(); return;} // ensure connected
-	console.log('RESTORE');
-	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json');
-	console.log('response: '+response.json);
-	var body=await response.json();
-    var items=body.items;
-	console.log(items.length+" items loaded");
-    save();
-    console.log('data imported and saved');
-    load();
-    showDialog('dataDialog',false);
-    message('data loaded');
-
 }
 // DISPLAY MESSAGE
 function message(text) {
@@ -373,10 +392,18 @@ else { // start-up - enter PIN
     id('keyCheck').value=keyCode;
     showDialog('keyDialog',true);
 }
+/*
 backupDay=window.localStorage.getItem('backupDay');
 if(backupDay) console.log('last backup on day '+backupDay);
 else backupDay=0;
-// load();
+*/
+latest=window.localStorage.getItem('latest');
+if(!latest) {
+	latest=new Date(0).toString(); // default to 1970
+	window.localStorage.setItem('latest',latest);
+}
+console.log('latest change: '+latest);
+load();
 // implement service worker if browser is PWA friendly
 if (navigator.serviceWorker.controller) {
 	console.log('Active service worker found, no need to register')
