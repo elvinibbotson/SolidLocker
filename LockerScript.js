@@ -237,9 +237,7 @@ function save() {
 	window.localStorage.setItem('latest',new Date().toString());
 	console.log('data saved to LockerData');
 }
-// id('connectButton').addEventListener('click',connect);
-// id('saveButton').addEventListener('click',backup);
-// id('loadButton').addEventListener('click',restore);
+// SOLID
 function connect() {
 	console.log('CONNECT - logging in');
 	// const auth=solidClientAuthentication;
@@ -265,7 +263,7 @@ async function sync() {
 	latest=window.localStorage.getItem('latest');
 	console.log('latest is '+latest);
 	message('SYNC - DOWNLOAD?',true);
-	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLogData.json',
+	var response=await session.fetch('https://elvinibbotson.privatedatapod.com/drive/SolidLockerData.json',
 	{ // ONLY RESTORE DATA FROM POD IF NEWER THAN CURRENT LOCAL DATA
 		method: 'GET',
 		headers: {'If-Modified-Since':latest}
@@ -305,8 +303,6 @@ async function upload() {
     	}
     	console.log('backup saved, status: '+response.status);
     	showDialog('dataDialog',false);
-    	// var today=Math.floor(new Date().getTime()/86400000);
-		// window.localStorage.setItem('backupDay',today);
     	message(items.length+' items saved');
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
