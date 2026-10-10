@@ -14,7 +14,6 @@ var currentDialog=null;
 var pin='';
 var keyCode=null;
 var dragStart={};
-// var backupDay;
 var latest;
 // solid session & authentication...
 const auth=solidClientAuthentication;
@@ -37,17 +36,7 @@ id('main').addEventListener('touchend', function(event) {
     // else if((drag.x>50)&&(currentDialog)) showDialog(currentDialog,false); // drag left to close dialogs
 })
 // TAP ON HEADER
-id('heading').addEventListener('click',function() {
-	upload();
-	/*
-	if(category===null) {
-		id('saveButton').disabled=false;
-		id('loadButton').disabled=false;
-		id('dataMessage').innerText='save or restore backup';
-		showDialog('dataDialog',true);
-	}
-	*/
-});
+id('buttonSync').addEventListener('click',connect);
 // CLOSE DIALOG
 id('curtain').addEventListener('click',function() {
 	showDialog(currentDialog,false);
@@ -202,10 +191,7 @@ function listCategoryItems() {
 function load() {
 	var data=localStorage.getItem('LockerData');
 	if(!data) {
-		id('dataMessage').innerText='No data - restore from backup?';
-		id('saveButton').disabled=true;
-		id('loadButton').disabled=false;
-		showDialog('dataDialog',true);
+		message('No data - restore from backup?');
 		return;
 	}
 	console.log('data: '+data.length+' bytes');
@@ -219,17 +205,6 @@ function load() {
 	console.log(items.length+' items loaded; '+categories.length+' categories');
 	category=null;
 	listCategories();
-	/*
-	var today=Math.floor(new Date().getTime()/86400000);
-	var days=today-backupDay;
-	if(days>4) { // backup reminder every 5 days
-		if(days>28) days='too many';
-		id('dataMessage').innerText=days+' days since last backup';
-		id('loadButton').disabled=false;
-		id('saveButton').disabled=true;
-		showDialog('dataDialog',true);
-	}
-	*/
 }
 function save() {
 	var data=JSON.stringify(items);
@@ -240,8 +215,6 @@ function save() {
 // SOLID
 function connect() {
 	console.log('CONNECT - logging in');
-	// const auth=solidClientAuthentication;
-	// const session=auth.getDefaultSession();
 	try {
 		auth.login({
     		oidcIssuer:"https://privatedatapod.com",
@@ -254,8 +227,7 @@ function connect() {
 auth.handleIncomingRedirect({restorePreviousSession:true}).then(function(){
 	if(session.info.isLoggedIn) {
 		console.log('logged in as '+session.info.webId);
-		id('saveButton').removeAttribute("disabled");
-    	id('loadButton').removeAttribute("disabled");
+		sync();
 	}
 });
 async function sync() {
@@ -272,7 +244,7 @@ async function sync() {
 	if(response.ok) {
 		var body=await response.json();
 		console.log('response - last modified: '+response.lastModified);
-		var items=body.items;
+		items=body.items;
 		save();
 		message(items.length+' items downloaded',false);
 	}
@@ -302,7 +274,6 @@ async function upload() {
     		throw new Error(`Response status: ${response.status}`);
     	}
     	console.log('backup saved, status: '+response.status);
-    	showDialog('dataDialog',false);
     	message(items.length+' items saved');
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
@@ -358,7 +329,11 @@ function tapKey(n) {
         	// unlocked=true;
         	showDialog('keyDialog',false);
         	// listCategories();
+        	
+        	
         	load();
+        	if(session.info.isLoggedIn) sync(); // initial sync
+        	
         	return true;
     	}
     	else {
@@ -366,7 +341,14 @@ function tapKey(n) {
 			pin='';
     	}
 	}
-}  
+}
+
+// PIN OK - CARRY ON
+function go() {
+	load();
+	if(session.info.isLoggedIn) sync(); // initial sync
+}
+
 // START-UP CODE
 keyCode=window.localStorage.keyCode; // load any saved key
 console.log("saved key: "+keyCode);
@@ -388,18 +370,24 @@ else { // start-up - enter PIN
     id('keyCheck').value=keyCode;
     showDialog('keyDialog',true);
 }
-/*
-backupDay=window.localStorage.getItem('backupDay');
-if(backupDay) console.log('last backup on day '+backupDay);
-else backupDay=0;
-*/
 latest=window.localStorage.getItem('latest');
 if(!latest) {
 	latest=new Date(0).toString(); // default to 1970
 	window.localStorage.setItem('latest',latest);
 }
 console.log('latest change: '+latest);
+
+
+
+
+/*
 load();
+
+// TRY THIS AT START...
+if(session.info.isLoggedIn) sync(); // initial sync
+*/
+
+
 // implement service worker if browser is PWA friendly
 if (navigator.serviceWorker.controller) {
 	console.log('Active service worker found, no need to register')
