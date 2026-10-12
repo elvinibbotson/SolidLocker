@@ -33,7 +33,6 @@ id('main').addEventListener('touchend', function(event) {
         category=null;
         listCategories();
     }
-    // else if((drag.x>50)&&(currentDialog)) showDialog(currentDialog,false); // drag left to close dialogs
 })
 // TAP ON HEADER
 id('buttonSync').addEventListener('click',connect);
@@ -326,14 +325,9 @@ function tapKey(n) {
     	}
     	else if(pin==id('keyCheck').value) { // set keyCode step 2 or unlock
         	window.localStorage.keyCode=cryptify(pin,'secrets');
-        	// unlocked=true;
         	showDialog('keyDialog',false);
-        	// listCategories();
-        	
-        	
         	load();
         	if(session.info.isLoggedIn) sync(); // initial sync
-        	
         	return true;
     	}
     	else {
@@ -342,13 +336,6 @@ function tapKey(n) {
     	}
 	}
 }
-
-// PIN OK - CARRY ON
-function go() {
-	load();
-	if(session.info.isLoggedIn) sync(); // initial sync
-}
-
 // START-UP CODE
 keyCode=window.localStorage.keyCode; // load any saved key
 console.log("saved key: "+keyCode);
