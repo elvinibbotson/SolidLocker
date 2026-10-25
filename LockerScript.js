@@ -14,7 +14,8 @@ var currentDialog=null;
 var pin='';
 var keyCode=null;
 var dragStart={};
-var latest;
+var syncDay; // last sync
+var latest; // last change
 // solid session & authentication...
 const auth=solidClientAuthentication;
 const session=auth.getDefaultSession();
@@ -208,8 +209,9 @@ function load() {
 function save() {
 	var data=JSON.stringify(items);
 	window.localStorage.setItem('LockerData',data);
-	window.localStorage.setItem('latest',new Date().toString());
-	console.log('data saved to LockerData');
+	latest=new Date().toString();
+	window.localStorage.setItem('latest',latest);
+	console.log('data saved to LockerData; latest is '+latest);
 }
 // SOLID
 function connect() {
@@ -251,9 +253,8 @@ async function sync() {
 		message('|no download - UPLOAD',false);
 		upload();
 	}
-	latest=new Date().toString();
-	window.localStorage.setItem('latest',latest);
-	console.log('latest set to '+latest);
+	syncDay=new Date()/86400000;
+	window.localStorage.setItem('syncDay',syncDay);
 	load(); // ensure working with latest dataset
 }
 async function upload() {
@@ -272,8 +273,10 @@ async function upload() {
 		if(!response.ok) {
     		throw new Error(`Response status: ${response.status}`);
     	}
-    	console.log('backup saved, status: '+response.status);
-    	message(items.length+' items saved');
+    	console.log('data uploaded, status: '+response.status);
+    	message(items.length+' items uploaded');
+    	syncDay=new Date()/86400000;
+		window.localStorage.setItem('syncDay',syncDay);
 	}
 	catch (error) {console.error(error.message);alert(error.message);}
 }
@@ -327,7 +330,8 @@ function tapKey(n) {
         	window.localStorage.keyCode=cryptify(pin,'secrets');
         	showDialog('keyDialog',false);
         	load();
-        	if(session.info.isLoggedIn) sync(); // initial sync
+        	if(new Date()/86400000-syncDay>5) message('More than 5 days since last sync.');
+        	// if(session.info.isLoggedIn) sync(); // initial sync
         	return true;
     	}
     	else {
@@ -363,18 +367,11 @@ if(!latest) {
 	window.localStorage.setItem('latest',latest);
 }
 console.log('latest change: '+latest);
-
-
-
-
-/*
-load();
-
-// TRY THIS AT START...
-if(session.info.isLoggedIn) sync(); // initial sync
-*/
-
-
+syncDay=window.localStorage.getItem('syncDay');
+if(!syncDay) {
+	syncDay=new Date(0)/86400000; // default to 1970
+	window.localStorage.setItem('syncDay',syncDay);
+}
 // implement service worker if browser is PWA friendly
 if (navigator.serviceWorker.controller) {
 	console.log('Active service worker found, no need to register')
