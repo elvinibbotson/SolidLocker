@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SolidLocker</title>
+    <link rel="stylesheet" type="text/css" href="Locker.css">
+    <link rel="manifest" href="manifest.json">
+    <script src='https://cdn.jsdelivr.net/npm/@inrupt/solid-client-authn-browser/dist/solid-client-authn.bundle.js'></script>
+    <meta name="application-name" content="SolidLocker">
+</head>
+<body>
+<div id='header'>
+    <span id='heading'>SolidLocker</span>
+    <button id="buttonSync" class="sync-button">
+</div>
+<div id="main">
+	<ul id="list"></ul>
+<div id='curtain'></div>
+<div id='buttonNew' class='round-button'></div>
+<div id='categoryDialog' class='dialog'>
+    <div id='categoryDialogTitle' class='dialog-title'>category</div>
+    <p><input type="text" id="categoryField" size="15"/></p>
+    <div class="dialog-buttons">
+    	<button id="addCategoryButton" class="icon-button"></button>
+	</div>
+</div>
+<div id='noteDialog' class='dialog'>
+    <div id='noteTitle' class='dialog-title'>note</div>
+    <textarea id="noteField" rows='5' cols='30'></textarea>
+    <br>
+    <div class="dialog-buttons">
+    	<button id="addNoteButton" class="icon-button"></button>
+    	<button id="saveNoteButton" class="icon-button"></button>
+		<button id="deleteNoteButton" class="icon-button"></button>
+	</div>
+</div>
+<div id='messageDialog' class='dialog'>
+	<div id='message'></div>
+</div>
+</div>
+<script src="Locker.js" async></script>
+</body>
+</html>

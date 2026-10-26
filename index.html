@@ -4,37 +4,11 @@
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SolidLocker</title>
-    <link rel="stylesheet" type="text/css" href="LockerStyles.css">
+    <link rel="stylesheet" type="text/css" href="Locker.css">
     <link rel="manifest" href="manifest.json">
-    <script src='https://cdn.jsdelivr.net/npm/@inrupt/solid-client-authn-browser/dist/solid-client-authn.bundle.js'></script>
     <meta name="application-name" content="SolidLocker">
 </head>
 <body>
-<div id='header'>
-    <span id='heading'>SolidLocker</span>
-    <button id="buttonSync" class="sync-button">
-</div>
-<div id="main">
-	<ul id="list"></ul>
-<div id='curtain'></div>
-<div id='buttonNew' class='round-button'></div>
-<div id='categoryDialog' class='dialog'>
-    <div id='categoryDialogTitle' class='dialog-title'>category</div>
-    <p><input type="text" id="categoryField" size="15"/></p>
-    <div class="dialog-buttons">
-    	<button id="addCategoryButton" class="icon-button"></button>
-	</div>
-</div>
-<div id='noteDialog' class='dialog'>
-    <div id='noteTitle' class='dialog-title'>note</div>
-    <textarea id="noteField" rows='5' cols='30'></textarea>
-    <br>
-    <div class="dialog-buttons">
-    	<button id="addNoteButton" class="icon-button"></button>
-    	<button id="saveNoteButton" class="icon-button"></button>
-		<button id="deleteNoteButton" class="icon-button"></button>
-	</div>
-</div>
 <div id='keyDialog' class='dialog'>
     <div class='dialog-title'>
         <span id='keyTitle'>PIN: </span>
@@ -49,10 +23,97 @@
 		<button class='key-button' onclick='tapKey("0");'>0</button>
 	</center>
 </div>
-<div id='messageDialog' class='dialog'>
-	<div id='message'></div>
-</div>
-</div>
-<script src="LockerScript.js" async></script>
+<script>
+	id('keyDialog').style.display='block';
+	keyCode=window.localStorage.keyCode; // load any saved key
+	console.log("saved key: "+keyCode);
+	if(!keyCode) { // first use - set a PIN
+		console.log('set new PIN');
+    	keyCode=null;
+    	id('keyTitle').innerText='set a PIN';
+    	id('pinField').innerText='';
+    	pin='';
+	}
+	else { // start-up - enter PIN
+		console.log('encrypted keyCode: '+keyCode);
+		keyCode=cryptify(keyCode,'secrets'); // saved key was encrypted
+		console.log("decoded keyCode: "+keyCode);
+		id('keyTitle').innerText='PIN';
+		id('pinField').innerText='';
+		pin='';
+    	id('keyCheck').value=keyCode;
+    	console.log('wait for keycode');
+	}
+	// KEY CHECK
+	function tapKey(n) {
+		// console.log(n+' tapped');
+		if(n=='<') {
+			console.log('BACKSPACE');
+			var l=pin.length;
+			if(l>0) pin=pin.substr(0,l-1);
+			console.log('pin: '+pin);
+			id('pinField').innerHTML='';
+			while(l>1) {
+				id('pinField').innerHTML+='*';
+				l--;
+			}
+			return false;
+		}
+		pin+=n;
+		id('pinField').innerHTML+='*';
+		// console.log('pin: '+pin);
+		if(pin.length>3) { // 4 digits entered
+			console.log("keyCode: "+keyCode);
+			console.log("check: "+id('keyCheck').value);
+			if(keyCode===null) { // set keyCode - step 1
+				keyCode=pin;
+				id('keyCheck').value=pin;
+				id('pinField').innerText='';
+				pin='';
+				id('keyTitle').innerText='confirm PIN';
+        		return;
+    		}
+    		else if(pin==id('keyCheck').value) { // set keyCode step 2 or unlock
+        		window.localStorage.keyCode=cryptify(pin,'secrets');
+        		console.log('switch to main page');
+        		window.location.href='Locker.html';
+        		return true;
+    		}
+    		else {
+    			id('pinField').innerText='';
+				pin='';
+    		}
+		}
+	}
+	// ENCRYPT/DECRYPT TEXT USING KEY
+	function cryptify(value,key) {
+		var i=0;
+		var result="";
+		var k;
+		var v;
+		for (i=0;i<value.length;i++) {
+			k=key.charCodeAt(i%key.length);
+			v=value.charCodeAt(i);
+			result+=String.fromCharCode(k ^ v);
+		}
+		return result;
+	};
+	// GET ELEMENT
+	function id(el) {
+		return document.getElementById(el);
+	}
+	// implement service worker if browser is PWA friendly
+	if (navigator.serviceWorker.controller) {
+		console.log('Active service worker found, no need to register')
+	}
+	else
+	{ //Register the ServiceWorker
+		navigator.serviceWorker.register('sw.js', {
+			scope: '/SolidLocker/'
+		}).then(function(reg) {
+			console.log('Service worker has been registered for scope:'+ reg.scope);
+		});
+	}
+</script>
 </body>
 </html>
